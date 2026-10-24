@@ -3392,3 +3392,54 @@ document.querySelectorAll("[data-view]").forEach((button) => {
 setMessagesDot(false); // shown only when there are unread messages
 renderFeed();          // demo Reels appear instantly; saved Reels load after
 renderStories();
+
+/* ReelTime PWA installation */
+(() => {
+  let installPrompt = null;
+
+  const installButton = document.getElementById("install-app-btn");
+
+  if (!installButton) {
+    console.warn("ReelTime install button was not found.");
+    return;
+  }
+
+  // Register the service worker.
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("./sw.js")
+        .catch((error) => {
+          console.error("ReelTime service worker registration failed:", error);
+        });
+    });
+  }
+
+  // Chrome fires this when the website is eligible for installation.
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    installPrompt = event;
+    installButton.hidden = false;
+  });
+
+  installButton.addEventListener("click", async () => {
+    if (!installPrompt) {
+      alert(
+        'If installation is available, open Chrome menu (⋮) and choose "Install app" or "Add to Home screen".'
+      );
+      return;
+    }
+
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    installPrompt = null;
+    installButton.hidden = true;
+  });
+
+  // Hide the button after successful installation.
+  window.addEventListener("appinstalled", () => {
+    installPrompt = null;
+    installButton.hidden = true;
+    console.log("ReelTime was installed.");
+  });
+})();

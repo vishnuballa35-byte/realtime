@@ -608,3 +608,17 @@ div.profile-avatar[style*="display: none"] { display: none; }
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 .discard-reel-btn:hover { background: var(--hover); }
+#install-app-btn {
+  padding: 10px 14px;
+  margin: 8px;
+  border: none;
+  border-radius: 10px;
+  background: #d4af37;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#install-app-btn[hidden] {
+  display: none;
+}
