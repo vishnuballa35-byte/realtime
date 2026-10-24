@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101014">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="ReelTime">
+  <title>ReelTime — Short videos, real connections</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="instagram-extras.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#" aria-label="ReelTime home"><span class="brand-mark">▶</span><span>ReelTime</span></a>
+    <nav class="main-nav">
+      <button class="nav-item active" data-view="feed"><span>⌂</span> Home</button>
+      <button class="nav-item" data-view="discover"><span>⌕</span> Discover</button>
+      <button class="nav-item" data-view="reels"><span>▶</span> Reels</button>
+      <button class="nav-item" data-view="messages"><span>✉</span> Messages <i class="nav-dot"></i></button>
+      <button class="nav-item" data-view="profile"><span>◎</span> Profile</button>
+    </nav>
+    <button class="create-btn" id="open-create">＋ Create Reel</button>
+    <div class="sidebar-bottom">
+      <button class="avatar avatar-you profile-auth-trigger" id="auth-profile-btn" type="button" aria-label="Open account">V</button>
+      <div class="account-label"><strong id="account-name">Your profile</strong><small id="account-status">Welcome to ReelTime</small></div>
+      <button class="icon-btn" id="settings-btn" title="Settings">⚙</button>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="topbar">
+      <a class="mobile-brand" href="#"><span class="brand-mark">▶</span> ReelTime</a>
+      <label class="search"><span>⌕</span><input id="search-input" placeholder="Search creators, sounds, videos..." aria-label="Search"></label>
+
+<button
+  class="icon-btn"
+  id="notifications-btn"
+  type="button"
+  title="Notifications"
+  aria-label="Notifications"
+>
+  🔔
+  <span id="notification-count" class="hidden">0</span>
+</button>
+
+    </header>
+
+    <div class="content-grid">
+      <section class="feed-column">
+        <div class="section-heading"><div><p class="eyebrow">YOUR DAILY DOSE</p><h1 id="page-title">Reels for you <span class="spark">✦</span></h1></div><span class="live-pill"><i></i> LIVE FEED</span></div>
+
+        <div id="feed" class="feed"></div>
+
+<!-- Other User Profile Page -->
+<section id="other-profile-page" class="profile-page hidden">
+  <button id="other-profile-back" class="primary-btn" type="button">
+    ← Back
+  </button>
+
+  <div class="profile-header">
+    <div class="profile-avatar" id="other-profile-avatar">U</div>
+
+    <img
+      class="profile-avatar-image"
+      id="other-profile-avatar-image"
+      alt="Creator profile photo"
+      style="display: none;"
+    >
+
+    <div class="profile-details">
+      <h2 id="other-profile-display-name">Creator</h2>
+      <p id="other-profile-username">@username</p>
+
+      <div class="profile-stats">
+        <div>
+          <strong id="other-profile-reel-count">0</strong>
+          <span>Reels</span>
+        </div>
+
+        <div>
+          <strong id="other-profile-follower-count">0</strong>
+          <span>Followers</span>
+        </div>
+
+        <div>
+          <strong id="other-profile-following-count">0</strong>
+          <span>Following</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-bio">
+    <p id="other-profile-bio">Welcome to my ReelTime profile ✨</p>
+
+    <div class="profile-actions">
+      <button
+        id="other-profile-follow-btn"
+        class="primary-btn"
+        type="button"
+      >
+        Follow
+      </button>
+
+      <button
+        id="other-profile-message-btn"
+        class="primary-btn secondary"
+        type="button"
+      >
+        Message
+      </button>
+    </div>
+  </div>
+
+  <div class="profile-tabs">
+    <button class="profile-tab active" type="button">
+      Reels
+    </button>
+  </div>
+
+  <div id="other-profile-reels" class="profile-reels"></div>
+
+  <div id="other-profile-empty" class="profile-empty hidden">
+    <h3>No Reels yet</h3>
+    <p>This creator hasn't uploaded any Reels yet.</p>
+  </div>
+</section>
+<!-- End Other User Profile Page -->
+
+<!-- My Profile Page -->
+<section id="profile-page" class="profile-page hidden">
+  <div class="profile-header">
+
+<div class="profile-avatar" id="profile-avatar">V</div>
+<img
+  class="profile-avatar-image"
+  id="profile-avatar-image"
+  alt="Profile photo"
+  style="display: none;"
+>
+
+    <div class="profile-details">
+      <h2 id="profile-display-name">Your profile</h2>
+      <p id="profile-username">@yourusername</p>
+
+      <!-- Separate counters: reels, followers, following -->
+      <div class="profile-stats">
+        <div>
+          <strong id="profile-reel-count">0</strong>
+          <span>Reels</span>
+        </div>
+
+        <button type="button" class="profile-stat-button" id="show-followers-btn">
+          <strong id="profile-follower-count">0</strong>
+          <span>Followers</span>
+        </button>
+
+        <button type="button" class="profile-stat-button" id="show-following-btn">
+          <strong id="profile-following-count">0</strong>
+          <span>Following</span>
+        </button>
+      </div>
+
+      <!-- Totals for your own Reels -->
+      <div class="profile-insights">
+        <div>
+          <strong id="profile-like-count">0</strong>
+          <span>♥ Likes</span>
+        </div>
+
+        <div>
+          <strong id="profile-view-count">0</strong>
+          <span>▶ Views</span>
+        </div>
+
+        <div>
+          <strong id="profile-comment-count">0</strong>
+          <span>◯ Comments</span>
+        </div>
+      </div>
+
+<div id="follow-list" class="follow-list" hidden>
+  <div class="follow-list-header">
+    <h3 id="follow-list-title">Following</h3>
+    <button type="button" id="close-follow-list">✕</button>
+  </div>
+  <div id="follow-list-content"></div>
+</div>
+
+    </div>
+  </div>
+
+  <div class="profile-bio">
+    <p id="profile-bio-text">Welcome to my ReelTime profile ✨</p>
+    <button id="profile-edit-btn" class="primary-btn" type="button">
+      Edit profile
+    </button>
+  </div>
+
+  <div class="profile-tabs">
+    <button class="profile-tab active" type="button">My Reels</button>
+  </div>
+
+  <div id="profile-reels" class="profile-reels"></div>
+
+  <div id="profile-empty" class="profile-empty hidden">
+    <h3>No Reels yet</h3>
+    <p>Upload your first Reel and it will appear here.</p>
+    <button id="profile-create-btn" class="primary-btn" type="button">
+      Create a Reel
+    </button>
+  </div>
+</section>
+<!-- End My Profile Page -->
+
+<!-- Edit Profile Modal -->
+<div id="edit-profile-modal" class="modal hidden">
+  <div class="modal-content">
+    <button
+      id="edit-profile-close"
+      type="button"
+      class="modal-close"
+      aria-label="Close"
+    >×</button>
+
+    <h2>Edit Profile</h2>
+
+    <form id="edit-profile-form">
+            <label for="edit-avatar">Profile photo</label>
+      <input
+        id="edit-avatar"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+      >
+      <img
+        id="edit-avatar-preview"
+        alt="Profile photo preview"
+        width="100"
+        height="100"
+        style="display: none; object-fit: cover; border-radius: 50%;"
+      >
+      <label for="edit-full-name">Display name</label>
+      <input
+        id="edit-full-name"
+        type="text"
+        maxlength="60"
+        required
+      >
+
+      <label for="edit-username">Username</label>
+      <input
+        id="edit-username"
+        type="text"
+        maxlength="30"
+        pattern="[A-Za-z0-9_]+"
+        required
+      >
+
+      <p id="edit-profile-message"></p>
+
+      <button type="submit" class="primary-btn">
+        Save changes
+      </button>
+    </form>
+  </div>
+</div>
+<!-- End Edit Profile Modal -->
+
+        <div id="empty-state" class="empty-state hidden"><div class="empty-icon">⌕</div><h2>No Reels found</h2><p>Try another search, or create the first Reel.</p></div>
+      </section>
+      <aside class="right-column">
+        <div class="welcome-card"><div class="welcome-art">✦</div><p class="eyebrow">YOUR SPACE, YOUR PEOPLE</p><h2>Good videos.<br><span>Better connections.</span></h2><p>Discover creators, share moments, and find your people.</p><button id="welcome-create">Create your first Reel <span>↗</span></button></div>
+        <div class="suggest-card"><div class="card-title"><h3>People to follow</h3><button id="refresh-suggestions">↻</button></div>
+          <button class="see-all" data-view="discover">Explore more creators <span>→</span></button>
+        </div>
+        <div class="footer-links">About · Guidelines · Privacy · Terms<br><span>© 2026 ReelTime</span></div>
+      </aside>
+    </div>
+  </main>
+
+  <nav class="mobile-nav">
+    <button class="active" data-view="feed"><span>⌂</span><small>Home</small></button>
+    <button data-view="discover"><span>⌕</span><small>Discover</small></button>
+    <button data-view="reels"><span>▶</span><small>Reels</small></button>
+    <button id="mobile-create"><span class="mobile-plus">＋</span><small>Create</small></button>
+    <button data-view="messages"><span>✉</span><small>Inbox</small></button>
+    <button data-view="profile"><span>◎</span><small>Profile</small></button>
+  </nav>
+
+  <div class="modal-backdrop hidden" id="create-modal" role="dialog" aria-modal="true" aria-labelledby="create-title">
+    <div class="modal">
+      <div class="modal-head"><div><p class="eyebrow">MAKE SOMETHING</p><h2 id="create-title">Create a Reel</h2></div><button class="close-btn" data-close="create-modal">×</button></div>
+      <form id="create-form">
+        <label class="upload-zone" for="video-file"><span class="upload-icon">↑</span><strong>Choose a video from your device</strong><small>MP4, WebM or MOV · UI demo only</small><input type="file" id="video-file" accept="video/*"></label>
+        <video id="video-preview" class="video-preview hidden" controls playsinline></video>
+        <label class="field-label" for="caption">Caption</label><textarea id="caption" maxlength="300" placeholder="Tell everyone what this Reel is about..." rows="3"></textarea>
+        <div class="form-row"><span class="muted">Keep it creative and kind ✨</span><span id="caption-count">0/300</span></div>
+        <button class="primary-btn full-btn" id="publish-reel-btn" type="submit">
+            Upload Reel <span>↗</span>
+        </button>
+        <p class="form-note">Upload your video to ReelTime and share it with others.</p>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="comments-modal" role="dialog" aria-modal="true" aria-labelledby="comments-title">
+    <div class="modal comments-modal"><div class="modal-head"><div><p class="eyebrow">THE CONVERSATION</p><h2 id="comments-title">Comments</h2></div><button class="close-btn" data-close="comments-modal">×</button></div><div id="comments-list" class="comments-list"></div><form id="comment-form" class="comment-form"><input id="comment-input" placeholder="Add a thoughtful comment..." maxlength="250" required><button class="primary-btn" type="submit">Post</button></form></div>
+  </div>
+
+
+  <div class="modal-backdrop hidden" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <div class="modal auth-modal">
+      <div class="modal-head">
+        <div><p class="eyebrow">WELCOME TO YOUR SPACE</p><h2 id="auth-title">Log in to ReelTime</h2></div>
+        <button class="close-btn" data-close="auth-modal" type="button" aria-label="Close login">×</button>
+      </div>
+      <p class="auth-intro" id="auth-intro">Log in to connect with creators and manage your profile.</p>
+      <div class="auth-tabs" role="group" aria-label="Choose account action">
+        <button class="auth-tab active" id="auth-login-tab" type="button">Log in</button>
+        <button class="auth-tab" id="auth-signup-tab" type="button">Create account</button>
+      </div>
+      <form id="auth-form">
+        <label class="auth-field hidden" id="auth-name-wrap" for="auth-name">Full name</label>
+        <input class="auth-input hidden" id="auth-name" type="text" maxlength="80" autocomplete="name" placeholder="Your name">
+        <label class="auth-field" for="auth-email">Email address</label>
+        <input class="auth-input" id="auth-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+        <label class="auth-field" for="auth-password">Password</label>
+        <input class="auth-input" id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="At least 6 characters" required>
+        <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
+        <button class="primary-btn full-btn auth-submit" id="auth-submit" type="submit">Log in</button>
+      </form>
+      <button class="auth-logout hidden" id="auth-logout-btn" type="button">Log out</button>
+      <p class="auth-privacy">Your password is handled by Supabase Auth; ReelTime does not store it in the profiles table.</p>
+    </div>
+  </div>
+
+    <div class="toast" id="toast" role="status"></div>
+
+  <!-- ReelTime Messages Page (Instagram-style inbox) -->
+  <section id="messages-page" class="dm-page hidden">
+    <aside class="dm-sidebar">
+      <div class="dm-sidebar-head">
+        <h2>Messages</h2>
+        <button class="dm-icon-btn" id="dm-new-btn" type="button" title="New message" aria-label="New message">✎</button>
+      </div>
+
+      <label class="dm-search">
+        <span>⌕</span>
+        <input id="dm-search" type="text" placeholder="Search people" autocomplete="off" aria-label="Search people">
+      </label>
+
+      <div class="dm-section-title" id="dm-list-title">Messages</div>
+      <div id="dm-list" class="dm-list"></div>
+    </aside>
+
+    <section class="dm-thread">
+      <div id="dm-empty" class="dm-empty">
+        <div class="dm-empty-icon">✉</div>
+        <h3>Your messages</h3>
+        <p>Send a message to a creator to start a chat.</p>
+        <button class="dm-empty-btn" id="dm-empty-btn" type="button">Send message</button>
+      </div>
+
+      <div id="dm-chat" class="dm-chat hidden">
+        <header class="dm-chat-head">
+          <button class="dm-back" id="dm-back" type="button" aria-label="Back to messages">←</button>
+          <button class="dm-head-user" id="dm-head-user" type="button">
+            <span id="dm-head-avatar"></span>
+            <span class="dm-head-text">
+              <strong id="dm-head-name"></strong>
+              <small id="dm-head-handle"></small>
+            </span>
+          </button>
+        </header>
+
+        <div id="dm-messages" class="dm-messages" aria-live="polite"></div>
+        <p id="dm-status" class="dm-status" role="status"></p>
+
+        <form id="dm-form" class="dm-form" autocomplete="off">
+          <input id="dm-input" type="text" maxlength="2000" placeholder="Message..." aria-label="Message">
+          <button class="dm-send" id="dm-send" type="submit">Send</button>
+        </form>
+      </div>
+    </section>
+  </section>
+
+  <!-- Reels page (opened from the profile grid) -->
+  <section id="reels-viewer-page" class="rv-page hidden">
+    <header class="rv-head">
+      <button class="rv-back" id="rv-back" type="button" aria-label="Back">←</button>
+      <h2 id="rv-title">Reels</h2>
+    </header>
+    <div id="rv-list" class="rv-list"></div>
+  </section>
+
+  <!-- Reels tab (TikTok-style scrolling) -->
+  <section id="reels-tab-page" class="rv-page hidden">
+    <header class="rv-head">
+      <h2>Reels</h2>
+      <button class="rv-plus" id="rt-create" type="button" aria-label="Create Reel">＋</button>
+    </header>
+    <div id="rt-list" class="rv-list"></div>
+  </section>
+
+<!-- ReelTime Notifications Page -->
+<section id="notifications-page" class="hidden">
+  <div class="messages-header">
+    <button id="notifications-back-btn" type="button">
+      ← Back
+    </button>
+    <h2>Notifications</h2>
+  </div>
+
+  <div id="notifications-list">
+    <p>Loading notifications...</p>
+  </div>
+</section>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="app.js"></script>
+  <script src="instagram-extras.js"></script>
+
+  <script>
+    // Lets the browser install ReelTime as an app.
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("sw.js")
+          .catch((error) => console.warn("Service worker failed:", error));
+      });
+    }
+  </script>
+</body>
+</html>
