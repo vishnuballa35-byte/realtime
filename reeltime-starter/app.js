@@ -3115,6 +3115,7 @@ document.querySelectorAll("[data-view]").forEach((button) => {
   const submitButton = $("auth-submit");
   const message = $("auth-message");
   const logoutButton = $("auth-logout-btn");
+  const sidebarLogoutButton = $("sidebar-logout-btn");
   const accountName = $("account-name");
   const accountStatus = $("account-status");
 
@@ -3345,6 +3346,9 @@ document.querySelectorAll("[data-view]").forEach((button) => {
 
     toast("You have logged out.");
   });
+  sidebarLogoutButton?.addEventListener("click", () => {
+  logoutButton?.click();
+});
 
   if (!client) {
     console.error(
