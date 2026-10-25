@@ -124,4 +124,4 @@ Verify the following before releasing updates:
 This project is available for learning and development. Add a license file if you intend to distribute or reuse the project under specific terms.
 
 
-live demo:https://lively-cassata-09ed56.netlify.app/
+
