@@ -1,0 +1,22 @@
+/* =====================================================
+   Audio-only calls: paste at the END of snap-theme.css
+   (or instagram-extras.css). No camera preview, no camera
+   button, and the person's avatar + name stay visible.
+   ===================================================== */
+
+.call-overlay.audio-only .call-local,
+.call-overlay.audio-only .call-remote,
+.call-overlay.audio-only [data-act="cam"] {
+  display: none !important;
+}
+
+.call-overlay.audio-only .call-info {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.call-overlay.audio-only .call-stage {
+  background: #101014;
+  color: #fff;
+}

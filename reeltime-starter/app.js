@@ -2529,16 +2529,35 @@ async function openChatWithUser(profile) {
 
   const myId = reelTimeChatUserId;
   const otherId = profile.id;
+  const { data: clearRecord, error: clearError } = await client
+  .from("chat_clears")
+  .select("cleared_at")
+  .eq("user_id", myId)
+  .eq("other_id", otherId)
+  .maybeSingle();
 
-  const { data, error } = await client
-    .from("messages")
-    .select("id, sender_id, receiver_id, message_text, created_at, read_at")
-    .or(
-      `and(sender_id.eq.${myId},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${myId})`
-    )
-    .order("created_at", { ascending: true })
-    .limit(500);
+if (clearError) {
+  console.error("Checking cleared chat failed:", clearError);
+  $("message-status").textContent =
+    "Could not load chat settings. Please try again.";
+  return;
+}
 
+const clearedAt = clearRecord?.cleared_at || null;
+let messageQuery = client
+  .from("messages")
+  .select("id, sender_id, receiver_id, message_text, created_at, read_at")
+  .or(
+    `and(sender_id.eq.${myId},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${myId})`
+  );
+
+if (clearedAt) {
+  messageQuery = messageQuery.gt("created_at", clearedAt);
+}
+
+const { data, error } = await messageQuery
+  .order("created_at", { ascending: true })
+  .limit(500);
   if (error) {
     console.error("Loading chat failed:", error);
     $("message-status").textContent =
@@ -2585,7 +2604,13 @@ async function openChatWithUser(profile) {
         const message = payload.new;
 
         if (!message || !message.sender_id) return;
-
+            // Ignore messages hidden by this user's Clear Chat timestamp.
+if (
+  clearedAt &&
+  Date.parse(message.created_at) <= Date.parse(clearedAt)
+) {
+  return;
+}
         const relevant =
           (message.sender_id === myId && message.receiver_id === otherId) ||
           (message.sender_id === otherId && message.receiver_id === myId);
@@ -2728,7 +2753,12 @@ async function loadRecentChats() {
     }
   });
 
-  const otherIds = [...latestByUser.keys()];
+  // People whose chat was cleared stay in the list until you press Delete.
+  const keptChats = window.reelTimeKeptChats?.() || {};
+
+  const otherIds = [
+    ...new Set([...latestByUser.keys(), ...Object.keys(keptChats)])
+  ];
   container.replaceChildren();
 
   if (otherIds.length === 0) {
@@ -2762,12 +2792,14 @@ async function loadRecentChats() {
     button.type = "button";
     button.className = "message-user-result";
 
-    const previewText = String(latest.message_text || "");
+    // A cleared chat has no latest message, so show only the name.
+    const previewText = String(latest?.message_text || "");
     const shortPreview =
       previewText.length > 45 ? previewText.slice(0, 45) + "…" : previewText;
 
     button.textContent =
-      `@${profile.username} — ${shortPreview}` +
+      `@${profile.username}` +
+      (shortPreview ? ` — ${shortPreview}` : "") +
       (unread > 0 ? ` · ${unread} unread` : "");
 
     if (unread > 0) {
@@ -2790,7 +2822,6 @@ async function loadRecentChats() {
     container.textContent = "No visible chat profiles found.";
   }
 }
-
 // --------------------------------------------------
 // NOTIFICATIONS
 // --------------------------------------------------
@@ -3120,6 +3151,7 @@ document.querySelectorAll("[data-view]").forEach((button) => {
   const accountStatus = $("account-status");
 
   let authMode = "login";
+  let otpSent = false;
   let currentUser = null;
   let sessionReady = false;
 
@@ -3130,7 +3162,13 @@ document.querySelectorAll("[data-view]").forEach((button) => {
 
   function setMode(mode) {
     authMode = mode;
-
+    otpSent = false;
+passwordInput.value = "";
+passwordInput.required = false;
+passwordInput.type = "password";
+passwordInput.placeholder = "Password";
+passwordInput.removeAttribute("inputmode");
+passwordInput.removeAttribute("maxlength");
     const signup = mode === "signup";
 
     loginTab.classList.toggle("active", !signup);
@@ -3148,12 +3186,15 @@ document.querySelectorAll("[data-view]").forEach((button) => {
       ? "Join ReelTime and start building your creator profile."
       : "Log in to connect with creators and manage your profile.";
 
-    submitButton.textContent = signup ? "Create account" : "Log in";
+    submitButton.textContent = signup
+  ? "Send signup code"
+  : "Send login code";
 
     logoutButton.classList.add("hidden");
     form.classList.remove("hidden");
 
     setMessage("");
+
   }
 
   function openAuth(mode = "login") {
@@ -3257,75 +3298,120 @@ document.querySelectorAll("[data-view]").forEach((button) => {
   loginTab?.addEventListener("click", () => setMode("login"));
   signupTab?.addEventListener("click", () => setMode("signup"));
 
-  form?.addEventListener("submit", async (event) => {
-    event.preventDefault();
 
-    if (!client) {
-      setMessage(
-        "Supabase did not load. Check your internet connection and refresh.",
-        true
-      );
-      return;
-    }
 
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
 
-    submitButton.disabled = true;
-    submitButton.textContent =
-      authMode === "signup" ? "Creating account…" : "Logging in…";
 
-    setMessage("");
+form?.addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-    try {
-      if (authMode === "signup") {
-        const fullName = nameInput.value.trim();
+  if (!client) {
+    setMessage("Supabase did not load. Refresh and try again.", true);
+    return;
+  }
 
-        const { data, error } = await client.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: fullName } }
-        });
+  const email = emailInput.value.trim().toLowerCase();
+  const token = passwordInput.value.trim();
 
-        if (error) throw error;
+  submitButton.disabled = true;
+  setMessage("");
 
-        if (data.user && data.session) {
-          await ensureProfile(data.user);
-
-          setMessage("Account created successfully. You are now logged in.");
-          toast("Welcome to ReelTime!");
-
-          closeModal("auth-modal");
-        } else {
-          setMessage(
-            "Account created. Check your email for a verification link, then log in."
-          );
-        }
-      } else {
-        const { data, error } = await client.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (error) throw error;
-
-        await ensureProfile(data.user);
-
-        setMessage("Login successful!");
-        toast("Welcome back to ReelTime!");
-
-        closeModal("auth-modal");
+  try {
+    if (!otpSent) {
+      // Step 1: Request an email code
+      if (!email) {
+        throw new Error("Please enter your email address.");
       }
 
+      const fullName = nameInput.value.trim();
+
+      submitButton.textContent = "Sending code…";
+
+      const { error } = await client.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: authMode === "signup",
+          data:
+            authMode === "signup"
+              ? { full_name: fullName }
+              : undefined
+        }
+      });
+
+      if (error) throw error;
+
+      // Switch the password field to OTP mode
+      otpSent = true;
+
       passwordInput.value = "";
-    } catch (error) {
-      setMessage(error.message || "Something went wrong. Please try again.", true);
-    } finally {
-      submitButton.disabled = false;
-      submitButton.textContent =
-        authMode === "signup" ? "Create account" : "Log in";
+      passwordInput.type = "text";
+      passwordInput.required = true;
+      passwordInput.placeholder = "Enter your 8-digit email code";
+      passwordInput.autocomplete = "one-time-code";
+      passwordInput.inputMode = "numeric";
+      passwordInput.maxLength = 8;
+      passwordInput.minLength = 8;
+      submitButton.textContent = "Verify code";
+
+      setMessage(
+        "Code requested! Check your email, including Spam, and enter the 6-digit code."
+      );
+    } else {
+      // Step 2: Verify the email code
+      if (!email) {
+        throw new Error("Please enter your email address.");
+      }
+
+      if (!/^\d{8}$/.test(token)) {
+        throw new Error("Enter the 8-digit code from your email.");
+      }
+
+      submitButton.textContent = "Verifying…";
+
+      const { data, error } = await client.auth.verifyOtp({
+        email,
+        token,
+        type: "email"
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        await ensureProfile(data.user);
+      }
+
+      otpSent = false;
+
+      passwordInput.value = "";
+      passwordInput.type = "password";
+      passwordInput.required = false;
+      passwordInput.placeholder = "Password";
+      passwordInput.autocomplete = "current-password";
+      passwordInput.removeAttribute("inputmode");
+      passwordInput.removeAttribute("maxlength");
+
+      setMessage("Login successful!");
+      toast("Welcome to ReelTime!");
+      closeModal("auth-modal");
     }
-  });
+  } catch (error) {
+    setMessage(
+      error.message || "Something went wrong. Please try again.",
+      true
+    );
+  } finally {
+    submitButton.disabled = false;
+
+    if (otpSent) {
+      submitButton.textContent = "Verify code";
+    } else {
+      submitButton.textContent =
+        authMode === "signup" ? "Send signup code" : "Send login code";
+    }
+  }
+});
+
+
 
   logoutButton?.addEventListener("click", async () => {
     if (!client) return;

@@ -5,6 +5,7 @@
 //   2. A profile that shows likes / views / comments
 //   3. A separate Reels page opened from the profile grid
 //   4. A Reels tab (TikTok-style scrolling) with a + button
+//   5. Audio calls AND video calls
 // It reuses the helpers from app.js ($, getClient, toast, ...).
 // =====================================================
 
@@ -532,9 +533,11 @@ function renderDmHeader(profile) {
 // A missed call is saved as a normal chat message with this exact text.
 // renderThread() shows it as a call line instead of a bubble.
 const MISSED_CALL_TEXT = "📹 Missed video call";
+const MISSED_AUDIO_CALL_TEXT = "📞 Missed audio call";
 
 function renderThread() {
   const box = $("dm-messages");
+
   const myId = reelTimeChatUserId;
 
   const sorted = dmMessages
@@ -564,14 +567,21 @@ function renderThread() {
 
     const mine = message.sender_id === myId;
 
-    // Missed call line (the caller sees "No answer", the other person sees "Missed video call").
-    if (message.message_text === MISSED_CALL_TEXT) {
+    // Missed call line (the caller sees "No answer", the other person sees "Missed ... call").
+    if (
+      message.message_text === MISSED_CALL_TEXT ||
+      message.message_text === MISSED_AUDIO_CALL_TEXT
+    ) {
+      const isAudio = message.message_text === MISSED_AUDIO_CALL_TEXT;
+
       const logRow = document.createElement("div");
       logRow.className = "dm-row dm-call-log";
 
       const pill = document.createElement("div");
       pill.className = "dm-call-pill" + (mine ? "" : " missed");
-      pill.textContent = mine ? "📹 No answer" : MISSED_CALL_TEXT;
+      pill.textContent = mine
+        ? (isAudio ? "📞 No answer" : "📹 No answer")
+        : message.message_text;
       pill.title = date.toLocaleString();
 
       logRow.appendChild(pill);
@@ -808,12 +818,36 @@ async function openChatWithUser(profile) {
   const myId = reelTimeChatUserId;
   const otherId = profile.id;
 
-  const { data, error } = await client
+  // Get this user's Clear Chat timestamp.
+  const { data: clearRecord, error: clearError } = await client
+    .from("chat_clears")
+    .select("cleared_at")
+    .eq("user_id", myId)
+    .eq("other_id", otherId)
+    .maybeSingle();
+
+  if (token !== dmOpenToken) return;
+
+  if (clearError) {
+    console.error("Checking chat clear time failed:", clearError);
+    setDmStatus("Could not load chat settings.");
+    return;
+  }
+
+  const clearedAt = clearRecord?.cleared_at || null;
+
+  let messageQuery = client
     .from("messages")
     .select("id, sender_id, receiver_id, message_text, created_at, read_at")
     .or(
       `and(sender_id.eq.${myId},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${myId})`
-    )
+    );
+
+  if (clearedAt) {
+    messageQuery = messageQuery.gt("created_at", clearedAt);
+  }
+
+  const { data, error } = await messageQuery
     .order("created_at", { ascending: true })
     .limit(500);
 
@@ -848,6 +882,12 @@ async function openChatWithUser(profile) {
         const message = payload.new;
 
         if (!message || !message.sender_id) return;
+        if (
+          clearedAt &&
+          Date.parse(message.created_at) <= Date.parse(clearedAt)
+        ) {
+          return;
+        }
 
         const relevant =
           (message.sender_id === myId && message.receiver_id === otherId) ||
@@ -1305,18 +1345,19 @@ document.addEventListener(
 })();
 
 // --------------------------------------------------
-// VIDEO CALLS (secure version)
-// Needs video-call-security.sql to be run once in Supabase.
+// AUDIO + VIDEO CALLS (secure version)
+// Needs snap-calls.sql (audio + video version) to be run once in Supabase.
 //
 //  * start_call()  : database function that decides who may call whom
-//                    (mutual followers, not blocked, max 5 calls a minute)
-//                    and creates a row in the "calls" table.
+//                    (both people have chatted, not blocked, max 5 calls
+//                    a minute) and creates a row in the "calls" table,
+//                    including call_type = 'audio' or 'video'.
 //  * Incoming call : the other person is told through a protected
-//                    database change, so the caller's identity comes
-//                    from the server and cannot be faked.
+//                    database change, so the caller's identity and the
+//                    call type come from the server and cannot be faked.
 //  * call:<callId> : a PRIVATE Realtime channel. Only the two people
 //                    in that call can join it or send to it.
-//  * The video itself goes directly between the two browsers (WebRTC).
+//  * The audio/video goes directly between the two browsers (WebRTC).
 // --------------------------------------------------
 
 (function setupVideoCalls() {
@@ -1335,6 +1376,10 @@ document.addEventListener(
   let pendingInvite = null;  // an incoming call that is still ringing
   let inviteTimer = null;
   const endedCallIds = new Set();
+
+  function typeWord(callType) {
+    return callType === "audio" ? "audio" : "video";
+  }
 
   // ----- call notifications: ringtone, tab title, system pop-up -----
 
@@ -1372,14 +1417,15 @@ document.addEventListener(
     }
   }
 
-  function startRingtone() {
+  function startRingtone(callType = "video") {
     stopRingtone();
 
     beep();
     ringTimer = setInterval(beep, 2000);
 
     savedTitle = document.title;
-    document.title = "📞 Incoming video call";
+    document.title =
+      callType === "audio" ? "📞 Incoming audio call" : "📹 Incoming video call";
   }
 
   function stopRingtone() {
@@ -1393,12 +1439,12 @@ document.addEventListener(
   }
 
   // A pop-up outside the browser, shown only when the ReelTime tab is in the background.
-  function showSystemNotification(name) {
+  function showSystemNotification(name, callType = "video") {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
     if (!document.hidden) return;
 
     try {
-      systemNotification = new Notification("Incoming video call", {
+      systemNotification = new Notification(`Incoming ${typeWord(callType)} call`, {
         body: `${name} is calling you on ReelTime`,
         tag: "reeltime-call",
         requireInteraction: true
@@ -1439,11 +1485,13 @@ document.addEventListener(
     );
   }
 
-  // Adds "tried to video call you" to the other person's Notifications page.
+  // Adds "tried to call you" to the other person's Notifications page.
   async function recordMissedCall(activeCall) {
     const me = await getCurrentUser();
 
     if (!me) return;
+
+    const isAudio = activeCall.callType === "audio";
 
     const { data: mine } = await client
       .from("profiles")
@@ -1457,7 +1505,7 @@ document.addEventListener(
       recipient_id: activeCall.peerId,
       actor_id: me.id,
       type: "call",
-      message: `${name} tried to video call you.`
+      message: `${name} tried to ${isAudio ? "audio" : "video"} call you.`
     });
 
     if (error) console.warn("Could not save the missed call notification:", error.message);
@@ -1466,7 +1514,7 @@ document.addEventListener(
     const { error: messageError } = await client.from("messages").insert({
       sender_id: me.id,
       receiver_id: activeCall.peerId,
-      message_text: MISSED_CALL_TEXT
+      message_text: isAudio ? MISSED_AUDIO_CALL_TEXT : MISSED_CALL_TEXT
     });
 
     if (messageError) console.warn("Could not save the missed call in the chat:", messageError.message);
@@ -1480,23 +1528,27 @@ document.addEventListener(
     });
   }
 
-  function mediaErrorMessage(error) {
+  function mediaErrorMessage(error, callType = "video") {
     if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
-      return "Allow camera and microphone access to use video calls.";
+      return callType === "audio"
+        ? "Allow microphone access to use audio calls."
+        : "Allow camera and microphone access to use video calls.";
     }
 
     if (error?.name === "NotFoundError") {
-      return "No camera or microphone was found.";
+      return callType === "audio"
+        ? "No microphone was found."
+        : "No camera or microphone was found.";
     }
 
-    return error?.message || "Could not access your camera.";
+    return error?.message || "Could not access your microphone or camera.";
   }
 
   function callErrorMessage(error) {
     const text = `${error?.message || ""} ${error?.code || ""}`;
 
     if (/not_allowed/i.test(text)) {
-      return "You can only video call people you follow and who follow you back, and who you haven't blocked.";
+      return "You can call someone after you have both sent messages in your chat, and if neither of you has blocked the other.";
     }
 
     if (/too_many_calls/i.test(text)) {
@@ -1504,22 +1556,25 @@ document.addEventListener(
     }
 
     if (/not_logged_in/i.test(text)) {
-      return "Please log in to start a video call.";
+      return "Please log in to start a call.";
     }
 
     if (/PGRST202|Could not find the function|start_call/i.test(text)) {
-      return "Video calls are not set up yet. Run video-call-security.sql in Supabase.";
+      return "Calls are not set up yet. Run snap-calls.sql in Supabase.";
     }
 
     return "Could not start the call. Please try again.";
   }
 
-  async function getMedia() {
+  async function getMedia(callType = "video") {
     if (!navigator.mediaDevices?.getUserMedia) {
-      throw new Error("Video calls need an https page (or localhost).");
+      throw new Error("Calls need HTTPS or localhost.");
     }
 
-    return navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    return navigator.mediaDevices.getUserMedia({
+      video: callType === "video",
+      audio: true
+    });
   }
 
   // Joins the private room for one call. The database policies only let
@@ -1563,7 +1618,7 @@ document.addEventListener(
           client.removeChannel(room);
           reject(
             new Error(
-              "Could not connect to the call. Make sure video-call-security.sql was run in Supabase."
+              "Could not connect to the call. Make sure snap-calls.sql was run in Supabase."
             )
           );
         }
@@ -1623,11 +1678,12 @@ document.addEventListener(
     getOverlay().querySelector(".call-status").textContent = text || "";
   }
 
-  function showOverlay({ name, profile, status, incoming }) {
+  function showOverlay({ name, profile, status, incoming, callType = "video" }) {
     const overlay = getOverlay();
 
     overlay.classList.remove("hidden", "connected");
     overlay.classList.toggle("incoming", Boolean(incoming));
+    overlay.classList.toggle("audio-only", callType === "audio");
 
     overlay.querySelector(".call-name").textContent = name;
     overlay.querySelector(".call-avatar").replaceChildren(dmAvatar(profile));
@@ -1648,7 +1704,7 @@ document.addEventListener(
     const overlay = getOverlay();
 
     overlay.classList.add("hidden");
-    overlay.classList.remove("connected", "incoming");
+    overlay.classList.remove("connected", "incoming", "audio-only");
 
     overlay.querySelectorAll("video").forEach((video) => {
       video.srcObject = null;
@@ -1728,7 +1784,7 @@ document.addEventListener(
       } else if (pc.connectionState === "disconnected") {
         setStatus("Reconnecting…");
       } else if (pc.connectionState === "failed") {
-        endCall(true, "The video connection failed. Try again.");
+        endCall(true, "The connection failed. Try again.");
       }
     };
 
@@ -1868,7 +1924,9 @@ document.addEventListener(
 
   // ----- calling someone -----
 
-  async function startCall(userId) {
+  async function startCall(userId, callType = "video") {
+    if (callType !== "audio") callType = "video";
+
     if (call || pendingInvite || starting) {
       toast("You are already in a call.");
       return;
@@ -1877,7 +1935,7 @@ document.addEventListener(
     const me = await getCurrentUser();
 
     if (!me) {
-      promptLogin("Please log in to start a video call.");
+      promptLogin("Please log in to start a call.");
       return;
     }
 
@@ -1889,15 +1947,15 @@ document.addEventListener(
       let stream;
 
       try {
-        stream = await getMedia();
+        stream = await getMedia(callType);
       } catch (error) {
-        toast(mediaErrorMessage(error));
+        toast(mediaErrorMessage(error, callType));
         return;
       }
 
       // The database checks the rules and creates the call.
       const [callRes, peerRes] = await Promise.all([
-        client.rpc("start_call", { target_id: userId }),
+        client.rpc("start_call", { target_id: userId, p_call_type: callType }),
         client
           .from("profiles")
           .select("id, username, full_name, avatar_url")
@@ -1918,6 +1976,7 @@ document.addEventListener(
       const activeCall = {
         id: callRes.data,
         role: "caller",
+        callType,
         peerId: userId,
         localStream: stream,
         pendingIce: [],
@@ -1927,7 +1986,13 @@ document.addEventListener(
 
       call = activeCall;
 
-      showOverlay({ name: peerName, profile: peer, status: "Calling…", incoming: false });
+      showOverlay({
+        name: peerName,
+        profile: peer,
+        status: "Calling…",
+        incoming: false,
+        callType
+      });
       getOverlay().querySelector(".call-local").srcObject = stream;
 
       try {
@@ -1972,7 +2037,9 @@ document.addEventListener(
     // Already busy: ignore the new invite.
     if (call || pendingInvite || starting) return;
 
-    pendingInvite = payload;
+    const callType = payload.callType === "audio" ? "audio" : "video";
+
+    pendingInvite = { ...payload, callType };
 
     const name =
       payload.from.full_name || payload.from.username || "ReelTime user";
@@ -1980,12 +2047,13 @@ document.addEventListener(
     showOverlay({
       name,
       profile: payload.from,
-      status: "Incoming video call…",
-      incoming: true
+      status: callType === "audio" ? "Incoming audio call…" : "Incoming video call…",
+      incoming: true,
+      callType
     });
 
-    startRingtone();
-    showSystemNotification(name);
+    startRingtone(callType);
+    showSystemNotification(name, callType);
 
     clearTimeout(inviteTimer);
     inviteTimer = setTimeout(() => {
@@ -1993,12 +2061,12 @@ document.addEventListener(
 
       clearInvite();
       hideOverlay();
-      toast(`Missed video call from ${name}.`);
+      toast(`Missed ${typeWord(callType)} call from ${name}.`);
     }, INVITE_TIMEOUT_MS);
   }
 
-  // A new row in "calls" addressed to me. The caller's id comes from the
-  // database, so the name and photo shown here are the real ones.
+  // A new row in "calls" addressed to me. The caller's id and the call type
+  // come from the database, so the name, photo and type shown here are real.
   async function onInviteRow(row) {
     if (!row?.id || !incomingUserId || row.callee_id !== incomingUserId) return;
     if (row.ended_at || call || pendingInvite || starting) return;
@@ -2009,7 +2077,11 @@ document.addEventListener(
       .eq("id", row.caller_id)
       .maybeSingle();
 
-    onInvite({ callId: row.id, from: data || { id: row.caller_id } });
+    onInvite({
+      callId: row.id,
+      from: data || { id: row.caller_id },
+      callType: row.call_type || "video"
+    });
   }
 
   // The caller hung up while it was still ringing.
@@ -2022,10 +2094,11 @@ document.addEventListener(
 
     const name =
       pendingInvite.from.full_name || pendingInvite.from.username || "someone";
+    const callType = pendingInvite.callType;
 
     clearInvite();
     hideOverlay();
-    toast(`Missed video call from ${name}.`);
+    toast(`Missed ${typeWord(callType)} call from ${name}.`);
   }
 
   async function acceptInvite() {
@@ -2038,9 +2111,9 @@ document.addEventListener(
     let stream;
 
     try {
-      stream = await getMedia();
+      stream = await getMedia(invite.callType);
     } catch (error) {
-      toast(mediaErrorMessage(error));
+      toast(mediaErrorMessage(error, invite.callType));
       pendingInvite = invite;
       declineInvite();
       return;
@@ -2049,6 +2122,7 @@ document.addEventListener(
     const activeCall = {
       id: invite.callId,
       role: "callee",
+      callType: invite.callType,
       peerId: invite.from.id,
       localStream: stream,
       pendingIce: [],
@@ -2062,7 +2136,8 @@ document.addEventListener(
       name: invite.from.full_name || invite.from.username || "ReelTime user",
       profile: invite.from,
       status: "Connecting…",
-      incoming: false
+      incoming: false,
+      callType: invite.callType
     });
     getOverlay().querySelector(".call-local").srcObject = stream;
 
@@ -2176,10 +2251,39 @@ document.addEventListener(
     }, 0);
   });
 
-  // ----- "Video call" and "Block" buttons on a creator's profile -----
+  // ----- call buttons -----
+  // Other code can start a call with: window.startReelTimeCall(userId, "audio" | "video")
+  window.startReelTimeCall = startCall;
 
+  // 📞 and 📹 buttons in the chat header.
+  $("dm-audio-call")?.addEventListener("click", () => {
+    if (reelTimeChatUser) startCall(reelTimeChatUser.id, "audio");
+  });
+
+  $("dm-video-call")?.addEventListener("click", () => {
+    if (reelTimeChatUser) startCall(reelTimeChatUser.id, "video");
+  });
+
+  // ----- "Audio call", "Video call" and "Block" buttons on a creator's profile -----
   const actions = document.querySelector("#other-profile-page .profile-actions");
   let blockButton = $("other-profile-block-btn");
+
+  if (actions && !$("other-profile-audio-btn")) {
+    const audioButton = document.createElement("button");
+
+    audioButton.id = "other-profile-audio-btn";
+    audioButton.type = "button";
+    audioButton.className = "primary-btn secondary";
+    audioButton.textContent = "📞 Audio call";
+
+    audioButton.addEventListener("click", () => {
+      const userId = $("other-profile-follow-btn")?.dataset.userId;
+
+      if (userId) startCall(userId, "audio");
+    });
+
+    actions.appendChild(audioButton);
+  }
 
   if (actions && !$("other-profile-call-btn")) {
     const callButton = document.createElement("button");
@@ -2192,7 +2296,7 @@ document.addEventListener(
     callButton.addEventListener("click", () => {
       const userId = $("other-profile-follow-btn")?.dataset.userId;
 
-      if (userId) startCall(userId);
+      if (userId) startCall(userId, "video");
     });
 
     actions.appendChild(callButton);
@@ -2216,7 +2320,7 @@ document.addEventListener(
 
       if (
         !blocked &&
-        !confirm("Block this person? Neither of you will be able to video call the other.")
+        !confirm("Block this person? Neither of you will be able to call the other.")
       ) {
         return;
       }
@@ -2241,7 +2345,7 @@ document.addEventListener(
         toast(blocked ? "Person unblocked." : "Person blocked.");
       } catch (error) {
         console.error("Could not update block:", error);
-        toast("Could not update the block. Did you run video-call-security.sql?");
+        toast("Could not update the block. Did you run the calls SQL?");
       } finally {
         blockButton.disabled = false;
       }

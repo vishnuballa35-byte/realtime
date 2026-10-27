@@ -265,3 +265,41 @@
   #reels-tab-page .rv-item .reel-media { border-radius: 0; }
   #reels-tab-page .rv-item .reel-top { padding-top: 58px; border-radius: 0; }
 }
+
+.dm-chat-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dm-head-user {
+  flex: 1;
+  min-width: 0;
+}
+
+.dm-call-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dm-call-btn {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-size: 19px;
+  cursor: pointer;
+}
+
+.dm-call-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.dm-call-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

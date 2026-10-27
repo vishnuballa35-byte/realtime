@@ -4,25 +4,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101014">
+  <meta name="theme-color" content="#ff4d8d">
 
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+
+  <link rel="icon" href="./icons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16.png">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="ReelTime">
+  <meta name="apple-mobile-web-app-title" content="VN">
 
-  <title>ReelTime — Short videos, real connections</title>
-
-  <link rel="stylesheet" href="./style.css">
+  <title>VN — Short videos, real connections</title>
+   
+  <link rel="stylesheet" href="./chat-header-fix.css"> 
+  <link rel="stylesheet" href="./style.css"> //
   <link rel="stylesheet" href="./instagram-extras.css">
+  <link rel="stylesheet" href="./love-theme.css">
+  <link rel="stylesheet" href="./love-glow.css">
+  <link rel="stylesheet" href="./call-love.css">
 </head>
 
 <body>
   <aside class="sidebar">
-    <a class="brand" href="#" aria-label="ReelTime home"><span class="brand-mark">▶</span><span>ReelTime</span></a>
+    <a class="brand" href="#" aria-label="VN home"><span class="brand-mark">▶</span><span>VN</span></a>
     <nav class="main-nav">
       <button class="nav-item active" data-view="feed"><span>⌂</span> Home</button>
       <button class="nav-item" data-view="discover"><span>⌕</span> Discover</button>
@@ -33,7 +40,7 @@
     <button class="create-btn" id="open-create">＋ Create Reel</button>
     <div class="sidebar-bottom">
       <button class="avatar avatar-you profile-auth-trigger" id="auth-profile-btn" type="button" aria-label="Open account">V</button>
-      <div class="account-label"><strong id="account-name">Your profile</strong><small id="account-status">Welcome to ReelTime</small></div>
+      <div class="account-label"><strong id="account-name">Your profile</strong><small id="account-status">Welcome to VN</small></div>
       <button class="icon-btn" id="settings-btn" title="Settings">⚙</button>
       <button
   class="icon-btn"
@@ -45,14 +52,14 @@
   ↪
 </button>
       <button id="install-app-btn" type="button" hidden>
-  Install ReelTime
+  Install VN
 </button>
     </div>
   </aside>
 
   <main class="app-main">
     <header class="topbar">
-      <a class="mobile-brand" href="#"><span class="brand-mark">▶</span> ReelTime</a>
+      <a class="mobile-brand" href="#" aria-label="VN home"><span class="brand-mark">▶</span><span>VN</span></a>
       <label class="search"><span>⌕</span><input id="search-input" placeholder="Search creators, sounds, videos..." aria-label="Search"></label>
 
 <button
@@ -114,7 +121,7 @@
   </div>
 
   <div class="profile-bio">
-    <p id="other-profile-bio">Welcome to my ReelTime profile ✨</p>
+    <p id="other-profile-bio">Welcome to my VN profile ✨</p>
 
     <div class="profile-actions">
       <button
@@ -214,7 +221,7 @@
   </div>
 
   <div class="profile-bio">
-    <p id="profile-bio-text">Welcome to my ReelTime profile ✨</p>
+    <p id="profile-bio-text">Welcome to my VN profile ✨</p>
     <button id="profile-edit-btn" class="primary-btn" type="button">
       Edit profile
     </button>
@@ -296,7 +303,7 @@
         <div class="suggest-card"><div class="card-title"><h3>People to follow</h3><button id="refresh-suggestions">↻</button></div>
           <button class="see-all" data-view="discover">Explore more creators <span>→</span></button>
         </div>
-        <div class="footer-links">About · Guidelines · Privacy · Terms<br><span>© 2026 ReelTime</span></div>
+        <div class="footer-links">About · Guidelines · Privacy · Terms<br><span>© 2026 VN</span></div>
       </aside>
     </div>
   </main>
@@ -314,14 +321,14 @@
     <div class="modal">
       <div class="modal-head"><div><p class="eyebrow">MAKE SOMETHING</p><h2 id="create-title">Create a Reel</h2></div><button class="close-btn" data-close="create-modal">×</button></div>
       <form id="create-form">
-        <label class="upload-zone" for="video-file"><span class="upload-icon">↑</span><strong>Choose a video from your device</strong><small>MP4, WebM or MOV · UI demo only</small><input type="file" id="video-file" accept="video/*"></label>
+        <label class="upload-zone" for="video-file"><span class="upload-icon">↑</span><strong>Choose a video from your device</strong><small>MP4, WebM or MOV</small><input type="file" id="video-file" accept="video/*"></label>
         <video id="video-preview" class="video-preview hidden" controls playsinline></video>
         <label class="field-label" for="caption">Caption</label><textarea id="caption" maxlength="300" placeholder="Tell everyone what this Reel is about..." rows="3"></textarea>
         <div class="form-row"><span class="muted">Keep it creative and kind ✨</span><span id="caption-count">0/300</span></div>
         <button class="primary-btn full-btn" id="publish-reel-btn" type="submit">
             Upload Reel <span>↗</span>
         </button>
-        <p class="form-note">Upload your video to ReelTime and share it with others.</p>
+        <p class="form-note">Upload your video to VN and share it with others.</p>
       </form>
     </div>
   </div>
@@ -334,7 +341,7 @@
   <div class="modal-backdrop hidden" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
     <div class="modal auth-modal">
       <div class="modal-head">
-        <div><p class="eyebrow">WELCOME TO YOUR SPACE</p><h2 id="auth-title">Log in to ReelTime</h2></div>
+        <div><p class="eyebrow">WELCOME TO YOUR SPACE</p><h2 id="auth-title">Log in to VN</h2></div>
         <button class="close-btn" data-close="auth-modal" type="button" aria-label="Close login">×</button>
       </div>
       <p class="auth-intro" id="auth-intro">Log in to connect with creators and manage your profile.</p>
@@ -348,18 +355,26 @@
         <label class="auth-field" for="auth-email">Email address</label>
         <input class="auth-input" id="auth-email" type="email" autocomplete="email" placeholder="you@example.com" required>
         <label class="auth-field" for="auth-password">Password</label>
-        <input class="auth-input" id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="At least 6 characters" required>
+        
+<input
+  class="auth-input"
+  id="auth-password"
+  type="password"
+  autocomplete="current-password"
+  placeholder="Password"
+>
+
         <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
         <button class="primary-btn full-btn auth-submit" id="auth-submit" type="submit">Log in</button>
       </form>
       <button class="auth-logout hidden" id="auth-logout-btn" type="button">Log out</button>
-      <p class="auth-privacy">Your password is handled by Supabase Auth; ReelTime does not store it in the profiles table.</p>
+      <p class="auth-privacy">Your password is handled by Supabase Auth; VN does not store it in the profiles table.</p>
     </div>
   </div>
 
     <div class="toast" id="toast" role="status"></div>
 
-  <!-- ReelTime Messages Page (Instagram-style inbox) -->
+  <!-- VN Messages Page (Instagram-style inbox) -->
   <section id="messages-page" class="dm-page hidden">
     <aside class="dm-sidebar">
       <div class="dm-sidebar-head">
@@ -385,16 +400,37 @@
       </div>
 
       <div id="dm-chat" class="dm-chat hidden">
-        <header class="dm-chat-head">
-          <button class="dm-back" id="dm-back" type="button" aria-label="Back to messages">←</button>
-          <button class="dm-head-user" id="dm-head-user" type="button">
-            <span id="dm-head-avatar"></span>
-            <span class="dm-head-text">
-              <strong id="dm-head-name"></strong>
-              <small id="dm-head-handle"></small>
-            </span>
-          </button>
-        </header>
+        
+<header class="dm-chat-head">
+  <button class="dm-back" id="dm-back" type="button" aria-label="Back to messages">←</button>
+
+  <button class="dm-head-user" id="dm-head-user" type="button">
+    <span id="dm-head-avatar"></span>
+    <span class="dm-head-text">
+      <strong id="dm-head-name"></strong>
+      <small id="dm-head-handle"></small>
+    </span>
+  </button>
+
+  <div class="dm-call-actions">
+    <button
+      class="dm-call-btn"
+      id="dm-audio-call"
+      type="button"
+      title="Start audio call"
+      aria-label="Start audio call"
+    >📞</button>
+
+    <button
+      class="dm-call-btn"
+      id="dm-video-call"
+      type="button"
+      title="Start video call"
+      aria-label="Start video call"
+    >📹</button>
+  </div>
+</header>
+
 
         <div id="dm-messages" class="dm-messages" aria-live="polite"></div>
         <p id="dm-status" class="dm-status" role="status"></p>
@@ -425,7 +461,7 @@
     <div id="rt-list" class="rv-list"></div>
   </section>
 
-<!-- ReelTime Notifications Page -->
+<!-- VN Notifications Page -->
 <section id="notifications-page" class="hidden">
   <div class="messages-header">
     <button id="notifications-back-btn" type="button">
@@ -442,10 +478,17 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
   <script src="app.js"></script>
+  <script src="e2ee.js"></script>
   <script src="instagram-extras.js"></script>
-
+  <script src="chat-security.js"></script>
+  <script src="otp-login.js"></script>
+  <script src="chat-media.js"></script>
+  <script src="logout-button.js"></script>
+  <script src="clear-chat.js"></script>
+  <script src="call-minimize.js"></script>
+  
   <script>
-    // Lets the browser install ReelTime as an app.
+    // Lets the browser install VN as an app.
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker

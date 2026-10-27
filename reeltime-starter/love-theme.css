@@ -1,0 +1,357 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+
+/* =========================================================
+   REELTIME — love-theme.css  (load LAST, after instagram-extras.css)
+   Replaces snap-theme.css. Pink + white "love" theme with
+   hearts and flowers. It also keeps everything snap-theme did:
+   1. Messaging-only app (feed / reels / discover hidden)
+   2. Floating (minimized) video call window
+   3. Audio-only call screen
+========================================================= */
+
+/* ---------- 1. Colours ---------- */
+:root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --elev: #ffffff;
+  --input: #fff0f5;
+  --line: #ffdbe7;
+  --hover: #ffe0ec;
+  --text: #3b1f2c;
+  --muted: #a67c8d;
+  --blue: #ff4d8d;            /* used for links, unread dots, focus */
+  --blue-hover: #e63a7a;
+  --link: #d81b60;
+  --red: #d6264f;
+  --overlay: rgba(90, 10, 45, .42);
+  --font: "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --pink: #ff4d8d;
+  --pink-2: #ff7aa8;
+  --pink-soft: #ffeaf1;
+  --pink-line: #ffd0e0;
+  --rose: #d81b60;
+  --blush: #fff7fa;
+  --grad: linear-gradient(135deg, #ff8fb4 0%, #ff4d8d 55%, #e0206f 100%);
+  --ig-gradient: linear-gradient(135deg, #ffb3cc, #ff4d8d 60%, #d81b60);
+  --shadow-pink: 0 8px 22px rgba(255, 77, 141, .28);
+
+  /* Hearts + flowers tile (soft, used as a background pattern) */
+  --love-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cdefs%3E%3Cg id='f'%3E%3Ccircle cx='0' cy='-7' r='5'/%3E%3Ccircle cx='6.6' cy='-2.2' r='5'/%3E%3Ccircle cx='4' cy='5.7' r='5'/%3E%3Ccircle cx='-4' cy='5.7' r='5'/%3E%3Ccircle cx='-6.6' cy='-2.2' r='5'/%3E%3C/g%3E%3Cpath id='h' d='M20 35C20 35 0 22 0 10C0 3 5 0 10 0C14 0 18 3 20 7C22 3 26 0 30 0C35 0 40 3 40 10C40 22 20 35 20 35Z'/%3E%3C/defs%3E%3Cg fill='%23ff4d8d' fill-opacity='.10'%3E%3Cuse href='%23h' transform='translate(18 16) scale(.55) rotate(-12 20 17)'/%3E%3Cuse href='%23f' transform='translate(112 40)'/%3E%3Cuse href='%23h' transform='translate(104 108) scale(.4) rotate(14 20 17)'/%3E%3Cuse href='%23f' transform='translate(40 118) scale(.75)'/%3E%3C/g%3E%3Cg fill='%23ffb703' fill-opacity='.30'%3E%3Ccircle cx='112' cy='40' r='2.6'/%3E%3Ccircle cx='40' cy='118' r='2'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+::selection { background: #ffc8dc; color: #3b1f2c; }
+* { scrollbar-width: thin; scrollbar-color: #ffb8d0 transparent; }
+:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
+
+body {
+  font-family: var(--font);
+  background:
+    radial-gradient(900px 500px at 0% 0%, rgba(255, 182, 208, .35), transparent 60%),
+    radial-gradient(800px 500px at 100% 100%, rgba(255, 205, 224, .45), transparent 60%),
+    #fff;
+  background-attachment: fixed;
+}
+
+/* ---------- 2. Brand + sidebar ---------- */
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  background: var(--grad);
+  color: #fff;
+  font-size: 0;
+  box-shadow: var(--shadow-pink);
+}
+.brand-mark::before { content: "♥"; font-size: 17px; line-height: 1; }
+.brand > span:not(.brand-mark), .mobile-brand > span:not(.brand-mark) {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #ffffff 0%, #fff7fa 100%);
+  border-right: 1px solid var(--pink-line);
+}
+.sidebar::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 170px;
+  z-index: -1;
+  background: var(--love-pattern) center bottom / 140px;
+  -webkit-mask-image: linear-gradient(transparent, #000);
+  mask-image: linear-gradient(transparent, #000);
+  pointer-events: none;
+}
+.sidebar-bottom { border-top-color: var(--pink-line); }
+
+.nav-item, .create-btn { border-radius: 14px; font-weight: 500; }
+.nav-item:hover { background: var(--pink-soft); }
+.nav-item.active, .mobile-nav button.active { color: var(--rose); }
+.nav-item.active { background: var(--pink-soft); font-weight: 700; }
+.nav-dot { background: var(--pink); box-shadow: 0 0 0 3px rgba(255, 77, 141, .18); }
+
+.topbar {
+  background: rgba(255, 255, 255, .85);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--pink-line);
+}
+
+.avatar { background: linear-gradient(135deg, #ffc2d6, #ff6b9d); box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--pink-line); }
+.avatar-you, div.profile-avatar { background: var(--grad); color: #fff; }
+.mobile-nav { background: rgba(255, 255, 255, .92); border-top: 1px solid var(--pink-line); }
+
+/* ---------- 3. Buttons ---------- */
+.primary-btn, #messages-page .dm-empty-btn {
+  background: var(--grad);
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: var(--shadow-pink);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+.primary-btn:hover, #messages-page .dm-empty-btn:hover {
+  background: var(--grad);
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+#profile-edit-btn, #other-profile-back, .profile-actions .primary-btn.secondary {
+  background: var(--pink-soft);
+  color: var(--rose);
+  box-shadow: none;
+}
+#profile-edit-btn:hover, #other-profile-back:hover, .profile-actions .primary-btn.secondary:hover { background: var(--hover); }
+#profile-logout-btn { background: var(--pink-soft); color: var(--red); }
+.icon-btn:hover { background: var(--pink-soft); }
+
+/* ---------- 4. Messages ---------- */
+#messages-page.dm-page { background: var(--blush); }
+.dm-sidebar { background: #fff; border-right: 1px solid var(--pink-line); }
+.dm-sidebar-head h2 { color: var(--rose); letter-spacing: .2px; }
+.dm-sidebar-head h2::after { content: " ♥"; color: var(--pink); font-size: 16px; }
+#messages-page .dm-icon-btn { color: var(--rose); }
+#messages-page .dm-icon-btn:hover { background: var(--pink-soft); }
+
+.dm-search {
+  background: var(--pink-soft);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.dm-search:focus-within { border-color: var(--pink-2); box-shadow: 0 0 0 4px rgba(255, 77, 141, .12); }
+.dm-section-title { color: var(--rose); }
+
+#messages-page .dm-item {
+  width: calc(100% - 20px);
+  margin: 2px 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  transition: background .15s ease;
+}
+#messages-page .dm-item:hover { background: var(--pink-soft); }
+#messages-page .dm-item.active { background: linear-gradient(90deg, #ffe0ec, #fff0f5); }
+.dm-unread-dot { background: var(--pink); box-shadow: 0 0 0 3px rgba(255, 77, 141, .2); }
+.dm-item.unread .dm-item-text strong, .dm-item.unread .dm-preview { color: var(--rose); }
+
+/* Empty state: pink heart + floating flower and heart */
+.dm-thread { background: var(--love-pattern) 0 0 / 160px, linear-gradient(180deg, #fff9fb, #fff); }
+.dm-empty { position: relative; }
+.dm-empty-icon {
+  border: 0;
+  background: var(--grad);
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(255, 77, 141, .35);
+}
+.dm-empty h3 { color: var(--rose); font-weight: 700; }
+.dm-empty::before, .dm-empty::after {
+  position: absolute;
+  font-size: 26px;
+  opacity: .8;
+  animation: floaty 4s ease-in-out infinite;
+  pointer-events: none;
+}
+.dm-empty::before { content: "🌸"; top: 8%; left: 18%; }
+.dm-empty::after { content: "💗"; top: 14%; right: 18%; animation-delay: 1.2s; }
+@keyframes floaty {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50% { transform: translateY(-10px) rotate(6deg); }
+}
+
+/* Chat header */
+.dm-chat-head {
+  background: linear-gradient(90deg, #fff, #fff4f8);
+  border-bottom: 1px solid var(--pink-line);
+}
+.dm-head-user .avatar { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--pink-2); }
+.dm-head-text strong { color: var(--rose); }
+#messages-page .dm-head-actions button,
+#messages-page .dm-call-btn,
+#messages-page .dm-chat-head .dm-call-actions button {
+  background: var(--pink-soft);
+  color: var(--rose);
+  border: 1px solid var(--pink-line);
+  border-radius: 12px;
+}
+#messages-page .dm-call-btn { border-radius: 50%; }
+#messages-page .dm-head-actions button:hover,
+#messages-page .dm-call-btn:hover,
+#messages-page .dm-chat-head .dm-call-actions button:hover { background: var(--hover); }
+#messages-page .dm-head-actions .danger { color: var(--red); }
+#messages-page #dm-call-btn { background: var(--grad); color: #fff; border-color: transparent; }
+
+/* Messages area + bubbles */
+.dm-messages { background: var(--love-pattern) 0 0 / 160px, linear-gradient(180deg, #fff9fb, #fff); }
+.dm-day {
+  padding: 3px 12px;
+  border: 1px solid var(--pink-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--rose);
+  font-weight: 600;
+}
+.dm-bubble {
+  border: 1px solid var(--pink-line);
+  border-radius: 20px 20px 20px 6px;
+  background: #fff;
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(255, 77, 141, .08);
+}
+.dm-row.mine .dm-bubble {
+  border: 0;
+  border-radius: 20px 20px 6px 20px;
+  background: var(--grad);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(255, 77, 141, .3);
+}
+.dm-seen { color: var(--pink); font-weight: 600; }
+.dm-seen::after { content: " ♥"; }
+.dm-call-pill { border-color: var(--pink-line); background: #fff; color: var(--rose); }
+.dm-call-pill.missed { color: var(--red); }
+.dm-save { background: var(--pink-soft) !important; color: var(--rose) !important; }
+
+/* Message box */
+.dm-form {
+  background: #fff;
+  border: 1.5px solid var(--pink-line);
+  border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(255, 77, 141, .10);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.dm-form:focus-within { border-color: var(--pink-2); box-shadow: 0 6px 24px rgba(255, 77, 141, .22); }
+#dm-attach:hover { transform: scale(1.12); }
+#messages-page .dm-send { color: var(--rose); border-radius: 999px; }
+#messages-page .dm-send::after { content: " ♥"; }
+#messages-page .dm-send.ready { background: var(--grad); color: #fff; box-shadow: var(--shadow-pink); }
+#messages-page .dm-send.ready:hover { background: var(--grad); filter: brightness(1.05); }
+
+/* ---------- 5. Modals, login, toast ---------- */
+.modal, #edit-profile-modal .modal-content {
+  border: 1px solid var(--pink-line);
+  border-radius: 24px;
+  background: var(--love-pattern) 0 0 / 160px, #fff;
+  box-shadow: 0 24px 60px rgba(216, 27, 96, .22);
+}
+.modal-head h2::after { content: " ♥"; color: var(--pink); }
+.auth-tab.active { border-bottom-color: var(--pink); color: var(--rose); }
+.auth-input, #edit-profile-form input[type="text"], textarea {
+  background: #fff;
+  border: 1.5px solid var(--pink-line);
+  border-radius: 12px;
+}
+.auth-input:focus, #edit-profile-form input[type="text"]:focus, textarea:focus {
+  border-color: var(--pink-2);
+  box-shadow: 0 0 0 4px rgba(255, 77, 141, .12);
+}
+.auth-message { color: var(--rose); }
+.auth-message.error { color: var(--red); }
+.close-btn:hover { background: var(--pink-soft); }
+
+.toast {
+  border-radius: 999px;
+  background: var(--grad);
+  box-shadow: var(--shadow-pink);
+  font-weight: 600;
+}
+.toast::before { content: "♥ "; }
+
+/* Profile photo ring */
+img.profile-avatar-image, div.profile-avatar { box-shadow: 0 0 0 4px #fff, 0 0 0 7px var(--pink-2), 0 12px 30px rgba(255, 77, 141, .3); }
+.profile-details h2 { color: var(--rose); }
+
+/* ---------- 6. Messaging only ---------- */
+.main-nav [data-view="feed"], .main-nav [data-view="discover"], .main-nav [data-view="reels"],
+.mobile-nav [data-view="feed"], .mobile-nav [data-view="discover"], .mobile-nav [data-view="reels"],
+#mobile-create, .create-btn, .topbar .search, #notifications-btn,
+.right-column, .section-heading, #feed, #empty-state { display: none !important; }
+
+/* Profile: only photo, name, username, Edit, Log out */
+#profile-page .profile-stats, #profile-page .profile-insights, #profile-page .profile-tabs,
+#profile-page #profile-reels, #profile-page #profile-empty, #profile-page #follow-list,
+#other-profile-page .profile-stats, #other-profile-page .profile-tabs,
+#other-profile-page #other-profile-reels, #other-profile-page #other-profile-empty,
+#other-profile-follow-btn, #other-profile-call-btn { display: none !important; }
+
+/* Not logged in: only the login box */
+body.logged-out .main-nav, body.logged-out .mobile-nav { display: none !important; }
+body.logged-out #auth-modal .close-btn { display: none; }
+
+/* ---------- 7. Calls ---------- */
+.call-stage { background: #2a0f1c; }
+.call-btn { background: rgba(255, 255, 255, .24); }
+.call-btn.off { background: #fff; color: var(--rose); }
+.call-btn.call-end { background: #f23c57; }
+.call-btn.call-accept { background: #2fb344; }
+
+/* Minimized call (floating window) */
+.call-btn[data-act="mini"], .call-btn[data-act="pip"] { font-size: 20px; }
+.call-overlay.incoming [data-act="mini"], .call-overlay.incoming [data-act="pip"] { display: none; }
+
+.call-overlay.mini {
+  inset: auto 12px 96px auto;
+  width: auto;
+  height: auto;
+  background: transparent;
+  pointer-events: none;
+}
+.call-overlay.mini .call-stage {
+  width: 112px;
+  height: 160px;
+  border-radius: 20px;
+  box-shadow: 0 8px 26px rgba(216, 27, 96, .4);
+  border: 2px solid #fff;
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: none;
+}
+.call-overlay.mini .call-local, .call-overlay.mini .call-info { display: none; }
+.call-overlay.mini .call-controls { bottom: 6px; }
+.call-overlay.mini .call-btn:not(.call-end) { display: none; }
+.call-overlay.mini .call-end { width: 34px; height: 34px; font-size: 14px; }
+
+@media (max-width: 650px) {
+  .call-overlay.mini { inset: auto 10px 80px auto; }
+}
+
+/* Audio-only calls: pink screen with hearts, no camera preview */
+.call-overlay.audio-only .call-local,
+.call-overlay.audio-only .call-remote,
+.call-overlay.audio-only [data-act="cam"] {
+  display: none !important;
+}
+
+.call-overlay.audio-only .call-info {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.call-overlay.audio-only .call-stage {
+  background: var(--love-pattern) 0 0 / 160px, linear-gradient(160deg, #ff9fc0 0%, #ff4d8d 55%, #c2185b 100%);
+  color: #fff;
+}
+.call-overlay.audio-only .call-avatar .avatar { box-shadow: 0 0 0 6px rgba(255, 255, 255, .45), 0 0 0 14px rgba(255, 255, 255, .18); }
+.brand-mark::before { content: "VN"; font: 700 13px var(--font); letter-spacing: -.5px; }
+.brand-mark { width: 36px; height: 36px; }

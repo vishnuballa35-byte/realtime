@@ -1,0 +1,186 @@
+/* =========================================================
+   REELTIME — call-love.css
+   Load LAST (after love-theme.css and love-hearts-big.css).
+   1. Love-themed call screen (ringing + connected + audio-only)
+   2. "Minimize" button on the call
+   3. Snapchat-style floating call window you can drag
+   (call-minimize.js adds the button and the dragging)
+========================================================= */
+
+/* ---------- 1. Call screen ---------- */
+.call-overlay {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 120, 170, .38), transparent 55%),
+    rgba(45, 6, 28, .90);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.call-stage {
+  border-radius: 28px;
+  background: linear-gradient(160deg, #ffa6c6 0%, #ff4d8d 52%, #b0125a 100%);
+  box-shadow: 0 30px 80px rgba(255, 77, 141, .38), 0 0 0 1px rgba(255, 255, 255, .28) inset;
+}
+
+/* The video is see-through until the other person's picture arrives,
+   so the pink love screen shows while it is ringing. */
+.call-remote { background: transparent; }
+.call-overlay.connected .call-remote { background: #1a0812; }
+
+/* Big hearts floating up the call screen (not over a live video) */
+.call-stage::before {
+  content:
+    "♥        ♡           ♥\A "
+    "     ♡         ♥\A "
+    "\A "
+    "  ♥          ♡         ♥\A "
+    "      ♡     ♥\A "
+    "\A "
+    "♡       ♥          ♡";
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 1;
+  width: 100%;
+  overflow: hidden;
+  white-space: pre;
+  font-size: 58px;
+  line-height: 125px;
+  color: #fff;
+  opacity: .5;
+  text-shadow: 0 0 12px rgba(255, 255, 255, .9), 0 0 30px rgba(255, 77, 141, .9);
+  pointer-events: none;
+  animation: callHeartsUp 20s linear -6s infinite;
+}
+.call-overlay.connected:not(.audio-only) .call-stage::before { display: none; }
+@keyframes callHeartsUp {
+  0%   { transform: translate3d(0, 0, 0); }
+  25%  { transform: translate3d(30px, calc(-25% - 27.5vh), 0); }
+  50%  { transform: translate3d(-25px, calc(-50% - 55vh), 0); }
+  75%  { transform: translate3d(28px, calc(-75% - 82.5vh), 0); }
+  100% { transform: translate3d(0, calc(-100% - 110vh), 0); }
+}
+
+/* Avatar with pulsing rings while ringing */
+.call-avatar .avatar {
+  border: 4px solid #fff;
+  animation: callRing 1.9s ease-out infinite;
+}
+@keyframes callRing {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 255, 255, .6), 0 0 0 0 rgba(255, 255, 255, .35), 0 0 34px rgba(255, 255, 255, .45); }
+  100% { box-shadow: 0 0 0 30px rgba(255, 255, 255, 0), 0 0 0 58px rgba(255, 255, 255, 0), 0 0 34px rgba(255, 255, 255, .45); }
+}
+.call-name { font-size: 24px; text-shadow: 0 0 16px rgba(255, 255, 255, .55), 0 2px 8px rgba(120, 10, 60, .5); }
+.call-status {
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .24);
+  color: #fff;
+  font-weight: 600;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.call-status::after { content: " ♥"; }
+.call-overlay.connected .call-name { font-size: 16px; }
+
+/* Your small camera picture */
+.call-local {
+  border: 2px solid #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(176, 18, 90, .45), 0 0 18px rgba(255, 255, 255, .3);
+}
+
+/* Buttons */
+.call-btn {
+  width: 60px;
+  height: 60px;
+  border: 1px solid rgba(255, 255, 255, .5);
+  background: rgba(255, 255, 255, .28);
+  box-shadow: 0 8px 22px rgba(176, 18, 90, .35);
+  transition: transform .15s ease, background .15s ease;
+}
+.call-btn:hover { background: rgba(255, 255, 255, .42); transform: scale(1.08); }
+.call-btn.off { background: #fff; color: var(--rose); }
+.call-btn.call-end { border-color: transparent; background: linear-gradient(135deg, #ff7a8f, #f23c57); box-shadow: 0 0 22px rgba(242, 60, 87, .7); }
+.call-btn.call-accept { border-color: transparent; background: linear-gradient(135deg, #5fe07a, #2fb344); box-shadow: 0 0 22px rgba(47, 179, 68, .6); }
+
+/* ---------- 2. Minimize button (top left of the call) ---------- */
+.call-min-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px 8px 10px;
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .28);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(176, 18, 90, .3);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: background .15s ease, transform .15s ease;
+}
+.call-min-btn span { font-size: 22px; line-height: .6; }
+.call-min-btn:hover { background: rgba(255, 255, 255, .44); transform: translateY(1px); }
+.call-overlay.mini .call-min-btn { display: none; }
+
+/* ---------- 3. Floating call window (Snapchat style) ---------- */
+.call-overlay.mini { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.call-overlay.mini .call-stage {
+  width: 116px;
+  height: 172px;
+  border: 2px solid #fff;
+  border-radius: 24px;
+  cursor: grab;
+  box-shadow: 0 0 0 3px rgba(255, 77, 141, .55), 0 12px 32px rgba(216, 27, 96, .5);
+  animation: miniGlow 2.2s ease-in-out infinite;
+}
+.call-overlay.mini .call-stage:active { cursor: grabbing; }
+@keyframes miniGlow {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(255, 77, 141, .5), 0 12px 32px rgba(216, 27, 96, .45); }
+  50%      { box-shadow: 0 0 0 6px rgba(255, 77, 141, .75), 0 12px 40px rgba(216, 27, 96, .7); }
+}
+.call-overlay.mini .call-stage::before { display: none; }
+
+/* Little beating heart: "call is live" */
+.call-overlay.mini .call-stage::after {
+  content: "♥";
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  z-index: 5;
+  color: #fff;
+  font-size: 18px;
+  text-shadow: 0 0 8px #ff4d8d, 0 0 16px #ff4d8d;
+  animation: miniBeat 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes miniBeat {
+  0%, 100% { transform: scale(1); }
+  20%      { transform: scale(1.3); }
+  40%      { transform: scale(1); }
+}
+
+/* Voice call in the small window: just the picture and name */
+.call-overlay.mini.audio-only .call-info { gap: 4px; padding: 8px; }
+.call-overlay.mini.audio-only .call-avatar .avatar { width: 58px; height: 58px; font-size: 22px; animation: none; border-width: 3px; }
+.call-overlay.mini.audio-only .call-name { max-width: 96px; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.call-overlay.mini .call-status { display: none; }
+.call-overlay.mini .call-end { width: 36px; height: 36px; font-size: 15px; }
+
+/* ---------- Phones ---------- */
+@media (max-width: 650px) {
+  .call-stage { border-radius: 0; }
+  .call-min-btn { top: calc(14px + env(safe-area-inset-top)); left: 12px; }
+  .call-overlay.mini .call-stage { border-radius: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .call-stage::before { display: none; }
+  .call-avatar .avatar, .call-overlay.mini .call-stage, .call-overlay.mini .call-stage::after { animation: none; }
+}

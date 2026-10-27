@@ -1,0 +1,185 @@
+/* =========================================================
+   REELTIME — love-hearts-big.css
+   Load LAST, after love-theme.css / love-glow.css / your premium CSS.
+   BIG glowing hearts that keep moving:
+     1. Login screen  - pink screen full of white glowing hearts
+     2. Messages / chat box - big hearts rising behind the chat
+     3. Whole app - soft hearts drifting over every page
+     4. Hover/tap a bubble -> a heart pops
+     5. Typing in the message box -> hearts rise from it
+   (The hearts are pure CSS, no JavaScript needed.)
+========================================================= */
+
+/* ---------- Shared look for every hearts layer ---------- */
+body::before, body::after,
+body.logged-out .modal-backdrop::before, body.logged-out .modal-backdrop::after,
+.dm-thread::before, .dm-thread::after,
+#messages-page.dm-page::before {
+  left: 0;
+  top: 100%;
+  width: 100%;
+  overflow: hidden;
+  white-space: pre;
+  font-weight: 400;
+  font-style: normal;
+  line-height: var(--lh);
+  font-size: var(--hs);
+  pointer-events: none;
+  will-change: transform;
+  animation: heartsUp var(--hd) linear var(--hdelay, 0s) infinite;
+}
+
+/* Glyph hearts (♥ ♡) with a neon glow */
+body::before, body.logged-out .modal-backdrop::before, .dm-thread::before, #messages-page.dm-page::before {
+  color: #ff4d8d;
+  text-shadow: 0 0 10px #ff4d8d, 0 0 28px rgba(255, 77, 141, .85), 0 0 56px rgba(255, 77, 141, .5);
+  content:
+    "♥          ♡              ♥\A "
+    "      ♡           ♥\A "
+    "\A "
+    "   ♥              ♡         ♥\A "
+    "          ♡     ♥\A "
+    "\A "
+    "♡        ♥               ♡\A "
+    "       ♥           ♡\A "
+    "\A "
+    "  ♥          ♡        ♥";
+}
+
+/* Emoji hearts + flowers (💖 💗 💕 🌸) */
+body::after, body.logged-out .modal-backdrop::after, .dm-thread::after {
+  filter: saturate(1.15);
+  text-shadow: 0 0 14px rgba(255, 77, 141, .7);
+  content:
+    "💖        🌸            💗\A "
+    "     💕         💖\A "
+    "\A "
+    "🌸      💗          💕        🌸\A "
+    "     💖        💗\A "
+    "\A "
+    "💕           🌸        💖";
+}
+
+/* Every layer slides up forever and sways left and right */
+@keyframes heartsUp {
+  0%   { transform: translate3d(0, 0, 0); }
+  25%  { transform: translate3d(45px, calc(-25% - 27.5vh), 0); }
+  50%  { transform: translate3d(-35px, calc(-50% - 55vh), 0); }
+  75%  { transform: translate3d(40px, calc(-75% - 82.5vh), 0); }
+  100% { transform: translate3d(0, calc(-100% - 110vh), 0); }
+}
+
+/* ---------- 1. Whole app (soft, big, behind menus) ---------- */
+body::before { position: fixed; z-index: 14; --hs: 46px; --lh: 150px; --hd: 34s; --hdelay: -9s; opacity: .30; }
+body::after  { position: fixed; z-index: 14; --hs: 38px; --lh: 130px; --hd: 28s; --hdelay: -17s; opacity: .55; }
+
+/* ---------- 2. Login: pink screen, many big white hearts ---------- */
+body.logged-out .modal-backdrop {
+  position: fixed;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 14%, rgba(255, 255, 255, .55), transparent 40%),
+    radial-gradient(circle at 86% 90%, rgba(255, 110, 165, .65), transparent 48%),
+    linear-gradient(160deg, #ffc9dc 0%, #ff86b3 48%, #e91e63 100%);
+}
+body.logged-out .modal-backdrop::before,
+body.logged-out .modal-backdrop::after { position: absolute; z-index: 1; }
+body.logged-out .modal-backdrop::before {
+  --hs: 84px; --lh: 150px; --hd: 22s; --hdelay: -8s;
+  opacity: .8;
+  color: #fff;
+  text-shadow: 0 0 14px rgba(255, 255, 255, .95), 0 0 36px rgba(255, 77, 141, .95), 0 0 70px rgba(255, 77, 141, .6);
+}
+body.logged-out .modal-backdrop::after { --hs: 56px; --lh: 130px; --hd: 29s; --hdelay: -19s; opacity: .95; }
+body.logged-out .modal-backdrop .modal { position: relative; z-index: 2; }
+
+/* ---------- 3. Chat box / messages ---------- */
+.dm-thread { position: relative; overflow: hidden; }
+.dm-thread::before, .dm-thread::after { position: absolute; z-index: 4; }
+.dm-thread::before { --hs: 68px; --lh: 135px; --hd: 24s; --hdelay: -6s; opacity: .40; }
+.dm-thread::after  { --hs: 44px; --lh: 120px; --hd: 31s; --hdelay: -20s; opacity: .65; }
+
+/* On phones the thread is hidden until you open a chat, so give the list hearts too */
+#messages-page.dm-page::before { display: none; position: absolute; z-index: 4; --hs: 50px; --lh: 130px; --hd: 26s; --hdelay: -7s; opacity: .35; }
+@media (max-width: 800px) {
+  #messages-page.dm-page::before { display: block; }
+}
+
+/* Big floating flower + heart on the empty chat screen */
+.dm-empty::before, .dm-empty::after { font-size: 48px; filter: drop-shadow(0 0 12px rgba(255, 77, 141, .7)); }
+.dm-empty::before { top: 4%; left: 14%; }
+.dm-empty::after  { top: 10%; right: 14%; }
+
+/* ---------- 4. Hover / tap a message: a heart pops ---------- */
+.dm-bubble { position: relative; }
+.dm-bubble::after {
+  content: "♥";
+  position: absolute;
+  top: -4px;
+  right: 14px;
+  font-size: 28px;
+  line-height: 1;
+  color: #ff4d8d;
+  opacity: 0;
+  pointer-events: none;
+  text-shadow: 0 0 10px #ff4d8d, 0 0 22px rgba(255, 77, 141, .8);
+}
+.dm-bubble::before {
+  content: "♡";
+  position: absolute;
+  top: -2px;
+  left: 14px;
+  font-size: 22px;
+  line-height: 1;
+  color: #ff7aa8;
+  opacity: 0;
+  pointer-events: none;
+  text-shadow: 0 0 10px #ff7aa8;
+}
+.dm-bubble:hover::after  { animation: bubbleHeart 1.2s ease-out; }
+.dm-bubble:hover::before { animation: bubbleHeart 1.2s ease-out .15s; }
+@keyframes bubbleHeart {
+  0%   { transform: translateY(0) scale(.4); opacity: 0; }
+  25%  { transform: translateY(-14px) scale(1.25); opacity: 1; }
+  100% { transform: translateY(-64px) scale(1.6) rotate(12deg); opacity: 0; }
+}
+
+/* ---------- 5. Typing in the message box: hearts rise from it ---------- */
+.dm-form { position: relative; }
+.dm-form:focus-within::before,
+.dm-form:focus-within::after {
+  position: absolute;
+  bottom: 100%;
+  left: 24px;
+  right: 24px;
+  font-size: 26px;
+  line-height: 1;
+  white-space: pre;
+  color: #ff4d8d;
+  pointer-events: none;
+  text-shadow: 0 0 10px #ff4d8d, 0 0 24px rgba(255, 77, 141, .8);
+  animation: typeHearts 2.4s ease-out infinite;
+}
+.dm-form:focus-within::before { content: "♥      ♡      ♥      ♡      ♥"; }
+.dm-form:focus-within::after  { content: "  ♡      ♥      ♡      ♥"; animation-delay: 1.2s; }
+@keyframes typeHearts {
+  0%   { transform: translateY(10px) scale(.6); opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: translateY(-80px) scale(1.25); opacity: 0; }
+}
+
+/* ---------- Phones: slightly smaller so text stays readable ---------- */
+@media (max-width: 650px) {
+  body::before { --hs: 34px; --lh: 120px; }
+  body::after  { --hs: 30px; --lh: 110px; }
+  body.logged-out .modal-backdrop::before { --hs: 60px; --lh: 130px; }
+  body.logged-out .modal-backdrop::after  { --hs: 42px; --lh: 115px; }
+  .dm-thread::before { --hs: 50px; --lh: 120px; }
+  .dm-thread::after  { --hs: 36px; --lh: 110px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before, body::after,
+  body.logged-out .modal-backdrop::before, body.logged-out .modal-backdrop::after,
+  .dm-thread::before, .dm-thread::after, #messages-page.dm-page::before { display: none !important; }
+}
